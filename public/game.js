@@ -66,8 +66,12 @@ function create ()
 
 function update()
 {
-    marker.x = groundLayer.getTileX(game.input.activePointer.worldX) * TILE_SIZE;
-    marker.y = groundLayer.getTileY(game.input.activePointer.worldY) * TILE_SIZE;
-
+  const cursorX = game.input.activePointer.worldX;
+  const cursorY = game.input.activePointer.worldY;
+  marker.x = groundLayer.getTileX(cursorX) * TILE_SIZE;
+  marker.y = groundLayer.getTileY(cursorY) * TILE_SIZE;
+  if (cursorX > 0 && cursorY >= 0) {
+    map.fill(31, groundLayer.getTileX(cursorX), groundLayer.getTileY(cursorY), 1, 1, envLayer);
+  }
 
 }
