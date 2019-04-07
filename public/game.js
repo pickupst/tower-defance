@@ -15,8 +15,13 @@ var config = {
     }
 };
 
+const TILE_SIZE = 128;
+
 var map;
-var layer;
+
+let groundLayer;
+let roadLayer;
+let envLayer;
 
 var marker;
 var currentTile;
@@ -44,17 +49,25 @@ function create ()
 
       //currentTile = map.getTile(2, 3);
 
-      layer = map.createLayer('ground');
+      groundLayer = map.createLayer('ground');
+      groundLayer.resizeWorld();
 
-      layer.resizeWorld();
+      roadLayer = map.createLayer('road');
+      roadLayer.resizeWorld();
+
+      envLayer = map.createLayer('env');
+      envLayer.resizeWorld();
 
       marker = game.add.graphics();
       marker.lineStyle(2, 0x000000, 1);
-      marker.drawRect(0, 0, 32, 32);
+      marker.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
 
 }
 
 function update()
 {
+    marker.x = groundLayer.getTileX(game.input.activePointer.worldX) * TILE_SIZE;
+    marker.y = groundLayer.getTileY(game.input.activePointer.worldY) * TILE_SIZE;
+
 
 }
