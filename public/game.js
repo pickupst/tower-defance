@@ -32,7 +32,11 @@ var currentTile;
 var cursors;
 
 var scenes = { preload: preload, create: create , update: update}
-var game = new Phaser.Game(2048, 1080, Phaser.AUTO, 'tower-defance', scenes);
+var game = new Phaser.Game(2048, 1280, Phaser.AUTO, 'tower-defance', scenes);
+
+var path = [{x: 2, y: 0}, {x: 2, y: 1}, {x: 2, y: 3}, {x: 2, y: 4}, {x: 2, y: 5}, {x: 2, y: 6}, {x: 2, y: 7}, {x: 2, y: 8}
+, {x: 5, y: 8}, {x: 6, y: 8}, {x: 6, y: 7}, {x: 6, y: 6}, {x: 6, y: 5},{x: 6, y: 4},{x: 6, y: 3}
+, {x: 8, y: 3}, {x: 9, y: 3}, {x: 10, y: 3},{x: 11, y: 3},{x: 12, y: 3},{x: 13, y: 3},{x: 14, y: 3},];
 
 
 function preload ()
@@ -41,6 +45,7 @@ function preload ()
       game.load.tilemap('td-map-1', './assets/td-map-1.json', null, Phaser.Tilemap.TILED_JSON);
       game.load.image('tiles', './assets/tilesheet.png');
       game.load.image('tower', './assets/tower.png');
+      game.load.image('enemy', './assets/enemy.png');
 
 }
 
@@ -113,10 +118,30 @@ function create ()
             enemys = game.add.group();
             enemys.enableBody = true;
             enemys.physicsBodyType = Phaser.Physics.ARCADE;
+
+
+            var i = 0;
+            var enemysBcl = setInterval(function() {
+                if (i < 5) {
+                    new Enemy(path[0].x * TILE_SIZE, path[0].y * TILE_SIZE);
+                } else {
+                    clearTimeout(enemysBcl);
+                }
+                i++;
+            }, 1000);
+
 }
 
 function update()
 {
+
+              /*
+             * Generate Enemy
+             */
+            enemys.forEach(function(enemy) {
+              Enemy.prototype.moveElmt(enemy);
+          });
+
   const cursorX = game.input.activePointer.worldX;
   const cursorY = game.input.activePointer.worldY;
   marker.x = groundLayer && groundLayer.getTileX(cursorX) * TILE_SIZE;
@@ -153,5 +178,67 @@ Tower.prototype.fire = function(tower) {
           game.physics.arcade.moveToObject(bullet, enemys.children[0], 500);
       }
       tower.fireLastTime = game.time.now + tower.fireTime;
+  }
+}
+
+var Enemy = function(x, y) {
+  this.enemy = game.add.sprite(path[0].x * TILE_SIZE + (TILE_SIZE / 2), path[0].y * TILE_SIZE + (TILE_SIZE / 2), 'enemy');
+  
+  this.enemy.anchor.setTo(0.5, 0.5);
+  this.enemy.speed = 6;
+  this.enemy.speedX = 0;
+  this.enemy.speedY = 0;
+  this.enemy.curTile = 0
+  enemys.add(this.enemy);
+  Enemy.prototype.nextTile(this.enemy);
+  Enemy.prototype.moveElmt(this.enemy);
+
+}
+Enemy.prototype.moveElmt = function(enemy) {
+
+  enemy.x += enemy.speedX;
+  enemy.y += enemy.speedY;
+
+  if (enemy.speedX > 0 && enemy.x >= enemy.next_positX) {
+      enemy.x = enemy.next_positX;
+      Enemy.prototype.nextTile(enemy);
+  }
+  else if (enemy.speedX < 0 && enemy.x <= enemy.next_positX) {
+      enemy.x = enemy.next_positX;
+      Enemy.prototype.nextTile(enemy);
+  }
+  else if (enemy.speedY > 0 && enemy.y >= enemy.next_positY) {
+      enemy.y = enemy.next_positY;
+      Enemy.prototype.nextTile(enemy);
+  }
+  else if (enemy.speedY < 0 && enemy.y <= enemy.next_positY) {
+      enemy.y = enemy.next_positY;
+      Enemy.prototype.nextTile(enemy);
+  }
+
+}
+Enemy.prototype.nextTile = function(enemy) {
+  enemy.curTile++;
+  enemy.next_positX = parseInt(path[enemy.curTile].x * TILE_SIZE + (TILE_SIZE / 2));
+  enemy.next_positY = parseInt(path[enemy.curTile].y * TILE_SIZE + (TILE_SIZE / 2));
+  // on check le sens gauche/droite
+  if (enemy.next_positX > enemy.x) {
+      enemy.speedX = enemy.speed;
+      enemy.angle = 0;
+  } else if (enemy.next_positX < enemy.x) {
+      enemy.speedX = -enemy.speed;
+      enemy.angle = 180;
+  } else {
+      enemy.speedX = 0;
+  }
+  // on check le sens haut/bas
+  if (enemy.next_positY > enemy.y) {
+      enemy.speedY = enemy.speed;
+      enemy.angle = 90;
+  } else if (enemy.next_positY < enemy.y) {
+      enemy.speedY = -enemy.speed;
+      enemy.angle = -90;
+  } else {
+      enemy.speedY = 0;
   }
 }
