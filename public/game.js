@@ -46,6 +46,7 @@ function preload ()
       game.load.image('tiles', './assets/tilesheet.png');
       game.load.image('tower', './assets/tower.png');
       game.load.image('enemy', './assets/enemy.png');
+      game.load.image('bullet', './assets/bullet.png');
 
 }
 
@@ -71,6 +72,8 @@ function create ()
       marker = game.add.graphics();
       marker.lineStyle(2, 0xffffff, 1);
       marker.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+
 
       var text = "+ Enemy";
       var style = {font: "55px Arial", fill: "#ff0044", align: "center"};
@@ -106,7 +109,7 @@ function create ()
             bullets.physicsBodyType = Phaser.Physics.ARCADE;
             bullets.createMultiple(30, 'bullet');
             bullets.setAll('anchor.x', 0.5);
-            bullets.setAll('anchor.y', 1);
+            bullets.setAll('anchor.y', 0.5);
             bullets.setAll('outOfBoundsKill', true);
             bullets.setAll('checkWorldBounds', true);
 
@@ -130,6 +133,14 @@ function create ()
                 i++;
             }, 1000);
 
+
+            var text = "+ BUllet Count: " + bullets.length;
+            var style = {font: "55px Arial", fill: "#ff0044", align: "center"};
+            var t = game.add.text(100, 140, text, style);
+            t.tint = "#000";
+            t.inputEnabled = true;
+      
+
 }
 
 function update()
@@ -142,6 +153,17 @@ function update()
               Enemy.prototype.moveElmt(enemy);
           });
 
+
+          /*
+             * ower fire
+             */
+            towers.forEach(function(tower) {
+              Tower.prototype.fire(tower);
+          });
+
+          //  Run collision
+          game.physics.arcade.overlap(bullets, enemys, collisionHandler, null, this);
+
   const cursorX = game.input.activePointer.worldX;
   const cursorY = game.input.activePointer.worldY;
   marker.x = groundLayer && groundLayer.getTileX(cursorX) * TILE_SIZE;
@@ -149,6 +171,24 @@ function update()
   
 
 }
+
+function collisionHandler(bullet, enemy) {
+
+  const bulletX = bullet.world.x;
+  const bulletY = bullet.world.y;
+  
+  const enemyX = enemy.world.x;
+  const enemyY = enemy.world.y;
+
+  const distance = Math.sqrt( Math.pow((bulletX - enemyX), 2) + Math.pow((bulletY - enemyY), 2) )
+  if (distance <= 30) {
+
+    bullet.kill();
+    enemy.destroy();
+      
+  }
+}
+
 
 
 var Tower = function(worldX, worldY, tileX, tileY, tile) {
@@ -168,16 +208,26 @@ var Tower = function(worldX, worldY, tileX, tileY, tile) {
 }
 
 Tower.prototype.fire = function(tower) {
-  bullets.createMultiple(1, 'bullet', 0, false);
+  //bullets.createMultiple(1, 'bullet', 0, false);
   if (game.time.now > tower.fireLastTime) {
       var bullet = bullets.getFirstExists(false);
+
+      const enemyX = enemys.children[0].world.x;
+      const enemyY = enemys.children[0].world.y;
+      const towerX = tower.world.x;
+      const towerY = tower.world.y;
+      
+      const distance = Math.sqrt( Math.pow((towerX - enemyX), 2) + Math.pow((towerY - enemyY), 2) );
+
+    if(distance < 300){
       if (bullet && typeof enemys.children[0] != "undefined") {
-          bullet.reset(tower.x, tower.y);
-          bullet.body.collideWorldBounds = true;
+          bullet.reset(tower.x + (TILE_SIZE / 2), tower.y);
+          bullet.body.collideWorldBounds = false;
           bullet.rotation = parseFloat(game.physics.arcade.angleToXY(bullet, enemys.children[0].x, enemys.children[0].y)) * 180 / Math.PI;
           game.physics.arcade.moveToObject(bullet, enemys.children[0], 500);
       }
       tower.fireLastTime = game.time.now + tower.fireTime;
+    }
   }
 }
 
