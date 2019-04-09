@@ -131,7 +131,7 @@ function create ()
                     clearTimeout(enemysBcl);
                 }
                 i++;
-            }, 1000);
+            }, 2000);
 
 
             var text = "+ BUllet Count: " + bullets.length;
@@ -194,7 +194,7 @@ function collisionHandler(bullet, enemy) {
 var Tower = function(worldX, worldY, tileX, tileY, tile) {
   var index = String(eval(tileX + "" + tileY));
 
-      this.tower = game.add.sprite(worldX, worldY, tile);
+      this.tower = game.add.sprite(worldX + TILE_SIZE / 2, worldY + TILE_SIZE / 2, tile);
       this.tower.worldX = worldX;
       this.tower.worldY = worldY;
       this.tower.tileX = tileX;
@@ -202,6 +202,7 @@ var Tower = function(worldX, worldY, tileX, tileY, tile) {
       this.tower.tile = tile;
       this.tower.fireTime = 2000;
       this.tower.fireLastTime = game.time.now + this.tower.fireTime;
+      this.tower.anchor.setTo(0.5, 0.5);
       towers.add(this.tower);
       //tileForbiden.push(index);
   
@@ -221,11 +222,14 @@ Tower.prototype.fire = function(tower) {
 
     if(distance < 300){
       if (bullet && typeof enemys.children[0] != "undefined") {
-          bullet.reset(tower.x + (TILE_SIZE / 2), tower.y);
+          bullet.reset(towerX, towerY);
           bullet.body.collideWorldBounds = false;
           bullet.rotation = parseFloat(game.physics.arcade.angleToXY(bullet, enemys.children[0].x, enemys.children[0].y)) * 180 / Math.PI;
           game.physics.arcade.moveToObject(bullet, enemys.children[0], 500);
-      }
+
+          const angle = (Math.atan2(towerY - enemyY, towerX - enemyX) * 180 / Math.PI) + 360 - 90;
+          tower.angle = angle;
+        }
       tower.fireLastTime = game.time.now + tower.fireTime;
     }
   }
